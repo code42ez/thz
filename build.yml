@@ -1,0 +1,36 @@
+
+name: Build APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Replace placeholders
+        run: |
+          sed -i "s|{{SITE_URL}}|${{ secrets.SITE_URL }}|g" app/src/main/java/com/example/okdak/MainActivity.java
+          sed -i "s|{{APP_NAME}}|${{ secrets.APP_NAME }}|g" app/src/main/res/values/strings.xml
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Build APK
+        run: ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: webview-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
